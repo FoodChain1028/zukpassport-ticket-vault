@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:frontend": "cd packages/client && pnpm run dev"
+    "dev:client": "cd packages/client && yarn dev"
   }
 }
