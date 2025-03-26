@@ -64,6 +64,13 @@ The system consists of several key components that work together to provide secu
 - [ ] Create user flows for passport scanning and verification
 - [ ] Add monitoring and security auditing for proof verification
 
+## Development
+
+```bash
+yarn install
+yarn dev:client
+```
+
 ## Reference
 
 ### zupass
