@@ -1,0 +1,10 @@
+{
+  "name": "zukpassport",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "cd packages/client && pnpm run dev"
+  }
+}
