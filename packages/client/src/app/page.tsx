@@ -1,14 +1,14 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { ZKPassport, ProofResult } from "@zkpassport/sdk";
-import QRCode from "react-qr-code";
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { ZKPassport, ProofResult } from '@zkpassport/sdk';
+import QRCode from 'react-qr-code';
 
 export default function Home() {
-  const [message, setMessage] = useState("");
-  const [firstName, setFirstName] = useState("");
+  const [message, setMessage] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [isOver18, setIsOver18] = useState<boolean | undefined>(undefined);
-  const [queryUrl, setQueryUrl] = useState("");
-  const [uniqueIdentifier, setUniqueIdentifier] = useState("");
+  const [queryUrl, setQueryUrl] = useState('');
+  const [uniqueIdentifier, setUniqueIdentifier] = useState('');
   const [verified, setVerified] = useState<boolean | undefined>(undefined);
   const [requestInProgress, setRequestInProgress] = useState(false);
   const zkPassportRef = useRef<ZKPassport | null>(null);
@@ -23,18 +23,18 @@ export default function Home() {
     if (!zkPassportRef.current) {
       return;
     }
-    setFirstName("");
-    setMessage("");
-    setQueryUrl("");
+    setFirstName('');
+    setMessage('');
+    setQueryUrl('');
     setIsOver18(undefined);
-    setUniqueIdentifier("");
+    setUniqueIdentifier('');
     setVerified(undefined);
 
     const queryBuilder = await zkPassportRef.current.request({
-      name: "ZKPassport",
-      logo: "https://zkpassport.id/favicon.png",
-      purpose: "Proof of EU citizenship and firstname",
-      scope: "eu-adult",
+      name: 'ZKPassport',
+      logo: 'https://zkpassport.id/favicon.png',
+      purpose: 'Proof of EU citizenship and firstname',
+      scope: 'eu-adult',
     });
 
     const {
@@ -45,11 +45,7 @@ export default function Home() {
       onResult,
       onReject,
       onError,
-    } = queryBuilder
-      .disclose("firstname")
-      .gte("age", 18)
-      .disclose("document_type")
-      .done();
+    } = queryBuilder.disclose('firstname').gte('age', 18).disclose('document_type').done();
 
     setQueryUrl(url);
     console.log(url);
@@ -57,31 +53,31 @@ export default function Home() {
     setRequestInProgress(true);
 
     onRequestReceived(() => {
-      console.log("QR code scanned");
-      setMessage("Request received");
+      console.log('QR code scanned');
+      setMessage('Request received');
     });
 
     onGeneratingProof(() => {
-      console.log("Generating proof");
-      setMessage("Generating proof...");
+      console.log('Generating proof');
+      setMessage('Generating proof...');
     });
 
     const proofs: ProofResult[] = [];
 
     onProofGenerated((result: ProofResult) => {
-      console.log("Proof result", result);
+      console.log('Proof result', result);
       proofs.push(result);
       setMessage(`Proofs received`);
       setRequestInProgress(false);
     });
 
     onResult(async ({ result, uniqueIdentifier, verified, queryResultErrors }) => {
-      console.log("Result of the query", result);
-      console.log("Query result errors", queryResultErrors);
+      console.log('Result of the query', result);
+      console.log('Query result errors', queryResultErrors);
       setFirstName(result?.firstname?.disclose?.result);
       setIsOver18(result?.age?.gte?.result);
-      setMessage("Result received");
-      setUniqueIdentifier(uniqueIdentifier || "");
+      setMessage('Result received');
+      setUniqueIdentifier(uniqueIdentifier || '');
       setVerified(verified);
       setRequestInProgress(false);
 
@@ -97,14 +93,14 @@ export default function Home() {
     });
 
     onReject(() => {
-      console.log("User rejected");
-      setMessage("User rejected the request");
+      console.log('User rejected');
+      setMessage('User rejected the request');
       setRequestInProgress(false);
     });
 
     onError((error: unknown) => {
-      console.error("Error", error);
-      setMessage("An error occurred");
+      console.error('Error', error);
+      setMessage('An error occurred');
       setRequestInProgress(false);
     });
   };
@@ -118,9 +114,9 @@ export default function Home() {
           <b>Firstname:</b> {firstName}
         </p>
       )}
-      {typeof isOver18 === "boolean" && (
+      {typeof isOver18 === 'boolean' && (
         <p className="mt-2">
-          <b>Is over 18:</b> {isOver18 ? "Yes" : "No"}
+          <b>Is over 18:</b> {isOver18 ? 'Yes' : 'No'}
         </p>
       )}
       {uniqueIdentifier && (
@@ -131,7 +127,7 @@ export default function Home() {
       {uniqueIdentifier && <p>{uniqueIdentifier}</p>}
       {verified !== undefined && (
         <p className="mt-2">
-          <b>Verified:</b> {verified ? "Yes" : "No"}
+          <b>Verified:</b> {verified ? 'Yes' : 'No'}
         </p>
       )}
       {!requestInProgress && (
