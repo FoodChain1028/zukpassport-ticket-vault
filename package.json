@@ -5,6 +5,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:client": "cd packages/client && yarn dev"
+    "client": "cd packages/client && yarn"
   }
 }
