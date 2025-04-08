@@ -1,92 +1,130 @@
-//! An end-to-end example of using the SP1 SDK to generate a proof of a program that can be executed
-//! or have a core proof generated.
-//!
-//! You can run this script using the following command:
-//! ```shell
-//! RUST_LOG=info cargo run --release -- --execute
-//! ```
-//! or
-//! ```shell
-//! RUST_LOG=info cargo run --release -- --prove
-//! ```
+use anyhow::Context;
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+use contract::HyleTicket;
+use contract::HyleTicketAction;
+use sdk::api::APIRegisterContract;
+use sdk::BlobTransaction;
+use sdk::HyleContract;
+use sdk::ProofTransaction;
+use sdk::{ContractInput, Digestable};
 
-use alloy_sol_types::SolType;
-use clap::Parser;
-use fibonacci_lib::PublicValuesStruct;
-use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
+use sp1_sdk::{include_elf, ProverClient};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
-pub const FIBONACCI_ELF: &[u8] = include_elf!("fibonacci-program");
+pub const CONTRACT_ELF: &[u8] = include_elf!("contract_elf");
 
-/// The arguments for the command.
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Args {
-    #[arg(long)]
-    execute: bool,
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
 
-    #[arg(long)]
-    prove: bool,
+    #[arg(long, default_value = "bob")]
+    pub username: String,
 
-    #[arg(long, default_value = "20")]
-    n: u32,
+    #[arg(long, default_value = "http://localhost:4321")]
+    pub host: String,
+
+    #[arg(long, default_value = "counter")]
+    pub contract_name: String,
 }
 
-fn main() {
-    // Setup the logger.
-    sp1_sdk::utils::setup_logger();
-    dotenv::dotenv().ok();
+#[derive(Subcommand)]
+enum Commands {
+    RegisterContract {},
+    Increment {},
+}
 
-    // Parse the command line arguments.
-    let args = Args::parse();
+#[tokio::main]
+async fn main() -> Result<()> {
+    let cli = Cli::parse();
 
-    if args.execute == args.prove {
-        eprintln!("Error: You must specify either --execute or --prove");
-        std::process::exit(1);
+    // Client to send requests to the node
+    let client = client_sdk::rest_client::NodeApiHttpClient::new(cli.host)?;
+    let contract_name = &cli.contract_name;
+
+    // This dummy example doesn't uses identities. But there are required fields & validation.
+    let identity = format!("{}.{}", cli.username, contract_name);
+
+    match cli.command {
+        Commands::RegisterContract {} => {
+            // Build initial state of contract
+            let initial_state = HyleTicket {
+                ticket_id: "1".to_string(),
+            };
+
+            println!("Computing contract's verification key...");
+
+            let prover_client = ProverClient::from_env();
+            let (_, vk) = prover_client.setup(CONTRACT_ELF);
+
+            let vk = serde_json::to_vec(&vk).unwrap();
+
+            // Send the transaction to register the contract
+            let res = client
+                .register_contract(&APIRegisterContract {
+                    verifier: "sp1".into(),
+                    program_id: sdk::ProgramId(vk),
+                    state_digest: initial_state.as_digest(),
+                    contract_name: contract_name.clone().into(),
+                })
+                .await?;
+            println!("✅ Register contract tx sent. Tx hash: {}", res);
+        }
+        Commands::Increment {} => {
+            // Fetch the initial state from the node
+            let mut initial_state: HyleTicket = client
+                .get_contract(&contract_name.clone().into())
+                .await
+                .unwrap()
+                .state
+                .into();
+
+            // ----
+            // Build the blob transaction
+            // ----
+            let action = HyleTicketAction::Verify {};
+            let blobs = vec![action.as_blob(contract_name)];
+            let blob_tx = BlobTransaction::new(identity.clone(), blobs.clone());
+
+            // Send the blob transaction
+            let blob_tx_hash = client.send_tx_blob(&blob_tx).await.unwrap();
+            println!("✅ Blob tx sent. Tx hash: {}", blob_tx_hash);
+
+            // ----
+            // Prove the state transition
+            // ----
+
+            // Build the contract input
+            let inputs = ContractInput {
+                state: initial_state.as_bytes().unwrap(),
+                identity: identity.clone().into(),
+                tx_hash: blob_tx_hash,
+                private_input: vec![],
+                tx_ctx: None,
+                blobs: blobs.clone(),
+                index: sdk::BlobIndex(0),
+            };
+
+            let (program_outputs, _, _) = initial_state.execute(&inputs).unwrap();
+            println!("🚀 Executed: {}", program_outputs);
+
+            // Generate the zk proof
+            let (proof, _) = client_sdk::helpers::sp1::prove(CONTRACT_ELF, &inputs)
+                .context("failed to prove")?;
+
+            // Build the Proof transaction
+            let proof_tx = ProofTransaction {
+                proof,
+                contract_name: contract_name.clone().into(),
+            };
+
+            // Send the proof transaction
+            let proof_tx_hash = client.send_tx_proof(&proof_tx).await.unwrap();
+            println!("✅ Proof tx sent. Tx hash: {}", proof_tx_hash);
+        }
     }
-
-    // Setup the prover client.
-    let client = ProverClient::from_env();
-
-    // Setup the inputs.
-    let mut stdin = SP1Stdin::new();
-    stdin.write(&args.n);
-
-    println!("n: {}", args.n);
-
-    if args.execute {
-        // Execute the program
-        let (output, report) = client.execute(FIBONACCI_ELF, &stdin).run().unwrap();
-        println!("Program executed successfully.");
-
-        // Read the output.
-        let decoded = PublicValuesStruct::abi_decode(output.as_slice(), true).unwrap();
-        let PublicValuesStruct { n, a, b } = decoded;
-        println!("n: {}", n);
-        println!("a: {}", a);
-        println!("b: {}", b);
-
-        let (expected_a, expected_b) = fibonacci_lib::fibonacci(n);
-        assert_eq!(a, expected_a);
-        assert_eq!(b, expected_b);
-        println!("Values are correct!");
-
-        // Record the number of cycles executed.
-        println!("Number of cycles: {}", report.total_instruction_count());
-    } else {
-        // Setup the program for proving.
-        let (pk, vk) = client.setup(FIBONACCI_ELF);
-
-        // Generate the proof
-        let proof = client
-            .prove(&pk, &stdin)
-            .run()
-            .expect("failed to generate proof");
-
-        println!("Successfully generated proof!");
-
-        // Verify the proof.
-        client.verify(&proof, &vk).expect("failed to verify proof");
-        println!("Successfully verified proof!");
-    }
+    Ok(())
 }

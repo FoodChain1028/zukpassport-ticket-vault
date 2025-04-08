@@ -1,9 +1,10 @@
 [package]
 version = "0.1.0"
-name = "fibonacci-program"
+name = "contract_elf"
 edition = "2021"
 
 [dependencies]
 alloy-sol-types = { workspace = true }
+sdk = { workspace = true, features = ["sp1"] }
 sp1-zkvm = "4.1.7"
-fibonacci-lib = { path = "../lib" }
+contract = { path = "../lib", package = "contract"}

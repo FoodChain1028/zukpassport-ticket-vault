@@ -1,30 +1,22 @@
-//! A simple program that takes a number `n` as input, and writes the `n-1`th and `n`th fibonacci
-//! number as an output.
-
-// These two lines are necessary for the program to properly compile.
-//
-// Under the hood, we wrap your main function with some extra code so that it behaves properly
-// inside the zkVM.
 #![no_main]
+
+extern crate alloc;
+
+use contract::HyleTicket;
+use sdk::guest::execute;
+use sdk::guest::GuestEnv;
+use sdk::guest::SP1Env;
+
 sp1_zkvm::entrypoint!(main);
 
-use alloy_sol_types::SolType;
-use fibonacci_lib::{fibonacci, PublicValuesStruct};
-
-pub fn main() {
-    // Read an input to the program.
+fn main() {
     //
-    // Behind the scenes, this compiles down to a custom system call which handles reading inputs
-    // from the prover.
-    let n = sp1_zkvm::io::read::<u32>();
+    // Usually you don't need to update this file.
+    // Except to specify the name of your contract type (here = Counter)
+    //
 
-    // Compute the n'th fibonacci number using a function from the workspace lib crate.
-    let (a, b) = fibonacci(n);
-
-    // Encode the public values of the program.
-    let bytes = PublicValuesStruct::abi_encode(&PublicValuesStruct { n, a, b });
-
-    // Commit to the public values of the program. The final proof will have a commitment to all the
-    // bytes that were committed to.
-    sp1_zkvm::io::commit_slice(&bytes);
+    let env = SP1Env {};
+    let input = env.read();
+    let (_, output) = execute::<HyleTicket>(&input);
+    env.commit(&output);
 }
