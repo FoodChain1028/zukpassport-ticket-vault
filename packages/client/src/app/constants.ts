@@ -14,6 +14,7 @@ export const ZUPASS_URL = ZUPASS_CLIENT_URL_ENV
   : IS_PROD
     ? 'https://zupass.org/'
     : 'http://localhost:3000/';
+
 export const ZUPASS_SERVER_URL = ZUPASS_SERVER_URL_ENV
   ? ZUPASS_SERVER_URL_ENV
   : IS_PROD
