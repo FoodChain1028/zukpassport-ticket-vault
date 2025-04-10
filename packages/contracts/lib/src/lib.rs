@@ -1,7 +1,10 @@
-use borsh::{io::Error, BorshDeserialize, BorshSerialize};
-use serde::{Deserialize, Serialize};
+mod constants;
+mod countries;
 
+use borsh::{io::Error, BorshDeserialize, BorshSerialize};
+use constants::EU_COUNTRIES;
 use sdk::{Digestable, HyleContract, RunResult};
+use serde::{Deserialize, Serialize};
 
 impl HyleContract for HyleTicket {
     /// Entry point of the contract's logic
@@ -11,12 +14,28 @@ impl HyleContract for HyleTicket {
             sdk::utils::parse_raw_contract_input::<HyleTicketAction>(contract_input)?;
 
         // Execute the contract logic
-        let value = match action {
-            HyleTicketAction::Verify => self.ticket_id.clone(),
+        match action {
+            HyleTicketAction::Buy => {
+                // TODO: 1. send tx to celo for registry proof? // this should be done in self backend
+                // TODO: 2. verify the disclosure proof from selfxyz
+                // TODO: 3. check discount according to the nationality
+                // TODO:    4.1 extract disclosure country from contract input
+                // let disclosure_country = contract_input
+                // TODO:    4.2 check discount
+                // TODO: 4. issue the ticket
+            }
+            HyleTicketAction::Spend => {
+                // TODO: 1. verify the proof
+            }
+            HyleTicketAction::Transfer => {
+                // TODO: 1. verify the proof
+                // TODO: 2. check the nationality of original ticket
+                // how do we check this?
+            }
         };
 
         // program_output might be used to give feedback to the user
-        let program_output = format!("new value: {}", value);
+        let program_output = format!("new value: {}", 1);
         Ok((program_output, ctx, vec![]))
     }
 }
@@ -25,13 +44,15 @@ impl HyleContract for HyleTicket {
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum HyleTicketAction {
     // define function interface in thie enum:
-    Verify,
+    Buy,
+    Spend,
+    Transfer,
 }
 
 /// The state of the contract, in this example it is fully serialized on-chain
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug, Clone)]
 pub struct HyleTicket {
-    pub ticket_id: String,
+    pub ticket_id: String, // a global ticket id
 }
 
 /// Utils function for the host

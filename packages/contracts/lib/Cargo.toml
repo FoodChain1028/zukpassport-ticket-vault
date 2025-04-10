@@ -11,3 +11,4 @@ serde = { version = "1.0", default-features = false, features = [
     "alloc",
 ] }
 borsh = { version = "1.5.5" }
+lazy_static = "1.4.0"

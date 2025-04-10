@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
             // ----
             // Build the blob transaction
             // ----
-            let action = HyleTicketAction::Verify {};
+            let action = HyleTicketAction::Buy {};
             let blobs = vec![action.as_blob(contract_name)];
             let blob_tx = BlobTransaction::new(identity.clone(), blobs.clone());
 
