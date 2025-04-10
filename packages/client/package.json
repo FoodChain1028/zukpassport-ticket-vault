@@ -17,6 +17,8 @@
     "@pcd/pcd-types": "^0.15.0",
     "@pcd/pod": "^0.5.0",
     "@pcd/pod-pcd": "^0.5.0",
+    "@selfxyz/core": "^0.0.24",
+    "@selfxyz/qrcode": "^0.0.19",
     "libsodium-sumo": "^0.7.15",
     "next": "15.2.4",
     "react": "^19.0.0",
