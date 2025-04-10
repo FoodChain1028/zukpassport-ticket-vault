@@ -5,6 +5,7 @@ import Image from 'next/image';
 import SelfQRcodeWrapper, { countries, SelfApp, SelfAppBuilder } from '@selfxyz/qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { countryCodes } from '@selfxyz/core';
+import { logo } from '../../public/logo';
 
 function Playground() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -154,7 +155,7 @@ function Playground() {
     // endpoint: "https://playground.self.xyz/api/verify",
     endpoint: endpoint + '/api/verify',
     endpointType: 'https',
-    logoBase64: 'https://i.imgur.com/Rz8B3s7.png',
+    logoBase64: logo,
     userId,
     disclosures: {
       ...disclosures,
