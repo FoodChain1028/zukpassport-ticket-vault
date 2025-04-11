@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import SelfQRcodeWrapper, { countries, SelfApp, SelfAppBuilder } from '@selfxyz/qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { countryCodes } from '@selfxyz/core';
@@ -172,44 +171,6 @@ function Playground() {
 
   return (
     <div className="App flex flex-col min-h-screen bg-white text-black" suppressHydrationWarning>
-      <nav className="w-full bg-white border-b border-gray-200 py-3 px-6 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="mr-8">
-            <Image width={32} height={32} src="/vercel.svg" alt="Vercel Logo" className="h-8" />
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <a
-            href="https://github.com/selfxyz/self"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gray-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-gray-800 transition-colors"
-          >
-            <span className="mr-2">Star on Github</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-            </svg>
-          </a>
-          <a
-            className="flex items-center justify-center gap-2 hover:underline hover:underline-offset-4"
-            href="https://self.xyz"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Go to self.xyz →
-          </a>
-        </div>
-      </nav>
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         <div className="w-full max-w-6xl flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/2 flex flex-col items-center justify-center">
