@@ -1,0 +1,10 @@
+[package]
+version = "0.1.0"
+name = "contract_elf"
+edition = "2021"
+
+[dependencies]
+alloy-sol-types = { workspace = true }
+sdk = { workspace = true, features = ["sp1"] }
+sp1-zkvm = "4.1.7"
+contract = { path = "../lib", package = "contract"}

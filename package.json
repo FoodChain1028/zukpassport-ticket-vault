@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
-    "client": "cd packages/client && yarn"
+    "client": "cd packages/client && yarn",
+    "contract": "cd packages/contracts && cargo"
   }
 }
