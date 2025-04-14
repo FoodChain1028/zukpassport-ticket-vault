@@ -6,8 +6,12 @@ function sanitizeEnv(envStr: string | undefined): string | undefined {
 }
 
 export const IS_PROD = sanitizeEnv(process.env.NEXT_PUBLIC_IS_PROD) === 'true';
-export const ZUPASS_CLIENT_URL_ENV = sanitizeEnv(process.env.NEXT_PUBLIC_ZUPASS_CLIENT_URL_CONSUMER);
-export const ZUPASS_SERVER_URL_ENV = sanitizeEnv(process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL_CONSUMER);
+export const ZUPASS_CLIENT_URL_ENV = sanitizeEnv(
+  process.env.NEXT_PUBLIC_ZUPASS_CLIENT_URL_CONSUMER,
+);
+export const ZUPASS_SERVER_URL_ENV = sanitizeEnv(
+  process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL_CONSUMER,
+);
 
 export const ZUPASS_URL = ZUPASS_CLIENT_URL_ENV
   ? ZUPASS_CLIENT_URL_ENV

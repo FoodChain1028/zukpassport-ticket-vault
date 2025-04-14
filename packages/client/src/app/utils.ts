@@ -15,10 +15,10 @@ export function sendZupassRequest(proofUrl: string): void {
 
 /**
  * Add a new POD to Zupass
- * @param podContent 
- * @param podPrivateKey 
- * @param podFolder 
- * @param redirectToFolder 
+ * @param podContent
+ * @param podPrivateKey
+ * @param podFolder
+ * @param redirectToFolder
  */
 export async function addPODPCD(
   podContent: string,
@@ -26,7 +26,7 @@ export async function addPODPCD(
   podFolder: string | undefined,
   redirectToFolder?: boolean,
 ): Promise<void> {
-  podPrivateKey ='AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=';
+  podPrivateKey = 'AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=';
   const newPOD = new PODPCD(
     uuid(),
     POD.sign(podEntriesFromJSON(JSON.parse(podContent)), podPrivateKey),

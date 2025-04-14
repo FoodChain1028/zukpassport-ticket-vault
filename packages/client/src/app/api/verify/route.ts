@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getUserIdentifier, SelfBackendVerifier, countryCodes } from '@selfxyz/core';
-// import { kv } from '@vercel/kv';
-// import { SelfApp } from '@selfxyz/qrcode';
+import { SelfBackendVerifier, countryCodes, getUserIdentifier } from '@selfxyz/core';
+import { addVerificationData, getVerificationData } from '../../../utils/db';
 
 export async function POST(request: Request) {
   try {
@@ -10,9 +9,6 @@ export async function POST(request: Request) {
     if (!endpoint) {
       return NextResponse.json({ message: 'Missing NGROK_ENDPOINT in ENV' }, { status: 500 });
     }
-
-    console.log('Received Proof:', proof);
-    console.log('Received Public Signals:', publicSignals);
 
     if (!proof || !publicSignals) {
       return NextResponse.json(
@@ -25,67 +21,52 @@ export async function POST(request: Request) {
     console.log('Extracted userId from verification result:', userId);
 
     // Default options
-    const minimumAge = 18;
+    const minimumAge = 14;
     const excludedCountryList: string[] = [];
     const enableOfac = false;
-    const enabledDisclosures = {
-      issuing_state: false,
-      name: false,
-      nationality: false,
-      date_of_birth: false,
-      passport_number: false,
-      gender: false,
-      expiry_date: false,
-    };
 
     const configuredVerifier = new SelfBackendVerifier('self-playground', endpoint, 'uuid', false);
 
     if (minimumAge !== undefined) {
       configuredVerifier.setMinimumAge(minimumAge);
     }
-
     if (excludedCountryList.length > 0) {
       configuredVerifier.excludeCountries(
         ...(excludedCountryList as (keyof typeof countryCodes)[]),
       );
     }
-
     if (enableOfac) {
       configuredVerifier.enableNameAndDobOfacCheck();
     }
 
     const result = await configuredVerifier.verify(proof, publicSignals);
-    console.log('Verification result:', result);
+    const data = result.credentialSubject;
 
     if (result.isValid) {
-      const filteredSubject = { ...result.credentialSubject };
+      console.log('Verification successful');
+      try {
+        await addVerificationData(userId, proof, publicSignals, data);
+        console.log(`Verification data stored for UID: ${userId}`);
+      } catch (dbError) {
+        console.error('Failed to store verification data:', dbError);
+        return NextResponse.json({ message: 'Failed to store verification data' }, { status: 500 });
+      }
 
-      if (!enabledDisclosures.issuing_state && filteredSubject) {
-        filteredSubject.issuing_state = 'Not disclosed';
-      }
-      if (!enabledDisclosures.name && filteredSubject) {
-        filteredSubject.name = 'Not disclosed';
-      }
-      if (!enabledDisclosures.nationality && filteredSubject) {
-        filteredSubject.nationality = 'Not disclosed';
-      }
-      if (!enabledDisclosures.date_of_birth && filteredSubject) {
-        filteredSubject.date_of_birth = 'Not disclosed';
-      }
-      if (!enabledDisclosures.passport_number && filteredSubject) {
-        filteredSubject.passport_number = 'Not disclosed';
-      }
-      if (!enabledDisclosures.gender && filteredSubject) {
-        filteredSubject.gender = 'Not disclosed';
-      }
-      if (!enabledDisclosures.expiry_date && filteredSubject) {
-        filteredSubject.expiry_date = 'Not disclosed';
-      }
+      // try {
+      //   const data = await getVerificationData(userId);
+      //   console.log('Data:', data);
+      // } catch (dbError) {
+      //   console.error('Failed to retrieve verification data:', dbError);
+      //   return NextResponse.json(
+      //     { message: 'Failed to retrieve verification data' },
+      //     { status: 500 },
+      //   );
+      // }
 
       return NextResponse.json({
         status: 'success',
         result: result.isValid,
-        credentialSubject: filteredSubject,
+        credentialSubject: data,
         verificationOptions: {
           minimumAge,
           ofac: enableOfac,
