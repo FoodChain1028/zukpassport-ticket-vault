@@ -4,9 +4,8 @@ import { addPODPCD } from '../utils';
 import { convertProofForPOD, proofToPODString } from '../utils/podConverter';
 
 export default function TestPCD() {
-  const [podContent, setPODContent] = useState('{"A": "aaassddf"}');
   const [podPrivateKey] = useState('AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=');
-  const [podFolder, setPodFolder] = useState('Test PODs'); // Default folder name
+  const [podFolder, setPodFolder] = useState('Self Proof Data'); // Default folder name
 
   // Example proof structure
   // this is the real proof get from backend in Self.
@@ -49,7 +48,7 @@ export default function TestPCD() {
 
   // Convert to POD-compatible format
   const podData = convertProofForPOD(exampleProof, examplePublicSignals);
-  
+  console.log(podData);
   // For display purposes - pretty print the converted data
   const prettyPrintedPOD = JSON.stringify(podData, null, 2);
   
@@ -71,19 +70,7 @@ export default function TestPCD() {
           readOnly
         />
       </div>
-      
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">Original POD Content:</h3>
-        <textarea
-          className="w-full border p-2 font-mono text-sm"
-          cols={45}
-          rows={10}
-          value={podContent}
-          onChange={(e): void => {
-            setPODContent(e.target.value);
-          }}
-        />
-      </div>
+
       
       <div className="flex items-center mb-4">
         <label className="mr-4">
@@ -109,16 +96,6 @@ export default function TestPCD() {
           }}
         >
           Store ZK Proof in Zupass
-        </button>
-        
-        <button
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-          onClick={() => {
-            // Use whatever is in the textarea
-            addPODPCD(podContent, podPrivateKey, podFolder.length > 0 ? podFolder : undefined);
-          }}
-        >
-          Store Custom POD in Zupass
         </button>
       </div>
     </div>
