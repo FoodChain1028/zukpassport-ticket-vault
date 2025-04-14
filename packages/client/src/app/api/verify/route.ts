@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { SelfBackendVerifier, countryCodes, getUserIdentifier } from '@selfxyz/core';
-import { addVerificationData, getVerificationData } from '../../../utils/db';
+import { addVerificationData } from '../../../utils/db';
 
 export async function POST(request: Request) {
   try {
