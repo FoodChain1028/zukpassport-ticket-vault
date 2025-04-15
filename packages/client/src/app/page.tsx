@@ -76,8 +76,13 @@ function Playground() {
   return (
     <div className="App flex flex-col min-h-screen bg-white text-black" suppressHydrationWarning>
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-        <div className="w-full max-w-6xl flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-1/2 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-2xl font-bold mb-8">Passport Verification</h1>
+          <p className="text-sm text-gray-700 mb-8 max-w-xl text-center italic">
+            Open Your Selfxyz App and scan the qrcode, by doing so, you prove you have a valid
+            passport and agree to reveal your name and nationality to this app
+          </p>
+          <div className="flex flex-col items-center justify-center">
             <SelfQRcodeWrapper
               selfApp={selfApp}
               onSuccess={() => {

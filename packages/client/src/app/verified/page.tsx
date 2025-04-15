@@ -67,6 +67,9 @@ function VerifiedPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
       <h1 className="text-2xl font-bold mb-4 text-white">Verification Data</h1>
+      <p className="text-sm text-gray-300 mb-8 max-w-xl text-center italic">
+        This is your proof data from Self, these are not stored anyway else but in your zupass.
+      </p>
       <p className="mb-4 text-sm text-gray-300">User ID: {userId?.substring(0, 8)}...</p>
       {userData ? (
         <div className="bg-gray-800 p-3 rounded shadow w-full max-w-2xl border border-gray-700">
