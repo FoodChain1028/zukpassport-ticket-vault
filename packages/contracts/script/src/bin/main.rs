@@ -51,9 +51,7 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::RegisterContract {} => {
             // Build initial state of contract
-            let initial_state = HyleTicket {
-                ticket_id: "1".to_string(),
-            };
+            let initial_state = HyleTicket::new();
 
             println!("Computing contract's verification key...");
 
@@ -85,7 +83,9 @@ async fn main() -> Result<()> {
             // ----
             // Build the blob transaction
             // ----
-            let action = HyleTicketAction::Buy {};
+            let action = HyleTicketAction::Buy {
+                recipient: "initial_buyer".to_string(),
+            };
             let blobs = vec![action.as_blob(contract_name)];
             let blob_tx = BlobTransaction::new(identity.clone(), blobs.clone());
 
