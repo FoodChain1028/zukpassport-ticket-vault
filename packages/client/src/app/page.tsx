@@ -6,16 +6,28 @@ import { v4 as uuidv4 } from 'uuid';
 import { logo } from '../../public/logo';
 
 function Playground() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    // Check if running in the browser
+    if (typeof window !== 'undefined') {
+      let storedUserId = sessionStorage.getItem('userId');
+      if (!storedUserId) {
+        storedUserId = uuidv4();
+        sessionStorage.setItem('userId', storedUserId);
+        console.log('Generated and stored new userId:', storedUserId);
+      } else {
+        console.log('Retrieved existing userId:', storedUserId);
+      }
+      setUserId(storedUserId);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   const endpoint = process.env.NEXT_PUBLIC_NGROK_ENDPOINT;
 
   if (!endpoint) {
     console.error('Missing NGROK_ENDPOINT in ENV');
   }
-
-  useEffect(() => {
-    setUserId(uuidv4());
-  }, []);
 
   const disclosures = {
     // DG1 disclosures
@@ -39,7 +51,10 @@ function Playground() {
     ofac: true,
   };
 
-  if (!userId) return null;
+  if (!userId) {
+    // Render nothing or a loading state until userId is set
+    return <div>Loading...</div>;
+  }
 
   const selfApp = new SelfAppBuilder({
     appName: 'Self Playground',
