@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { addPODPCD } from '../utils';
+import { convertProofForPOD } from '../utils/podConverter';
+import { VerificationData } from '../types';
 
 function VerifiedPage() {
-  const [userData, setUserData] = useState<unknown | null>(null);
+  const [userData, setUserData] = useState<VerificationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [podFolder, setPodFolder] = useState('Self Passport Data');
+  const [podPrivateKey] = useState('AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE='); // TODO: use stored pkey here, should change to user's pkey.
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -65,9 +70,64 @@ function VerifiedPage() {
       <p className="mb-4 text-sm text-gray-300">User ID: {userId?.substring(0, 8)}...</p>
       {userData ? (
         <div className="bg-gray-800 p-3 rounded shadow w-full max-w-2xl border border-gray-700">
-          <pre className="text-sm overflow-x-auto text-green-300 max-h-120 overflow-y-auto">
+          <pre className="text-sm overflow-x-auto text-green-300 max-h-60 overflow-y-auto">
             {JSON.stringify(userData, null, 2)}
           </pre>
+
+          <div className="mt-4 flex flex-col items-center">
+            <div className="mb-2 flex items-center">
+              <label className="text-white text-xs mr-2">
+                Folder name:
+                <input
+                  type="text"
+                  value={podFolder}
+                  onChange={(e) => setPodFolder(e.target.value)}
+                  className="ml-2 p-1 border bg-gray-700 text-white text-xs rounded"
+                />
+              </label>
+            </div>
+
+            <button
+              onClick={() => {
+                if (!userData?.data) {
+                  setError('No verification data available');
+                  return;
+                }
+
+                try {
+                  // Extract proof and public signals from userData
+                  const { proof, public_signals, disclosure_data } = userData.data;
+
+                  // Convert proof and public signals to POD format
+                  const podData = convertProofForPOD(proof, public_signals);
+
+                  // Add disclosure data to podData
+                  if (disclosure_data) {
+                    Object.entries(disclosure_data).forEach(([key, value]) => {
+                      // Handle arrays and objects by stringifying them
+                      if (typeof value === 'object' && value !== null) {
+                        podData[`disclosure_${key}`] = JSON.stringify(value);
+                      } else {
+                        podData[`disclosure_${key}`] = String(value);
+                      }
+                    });
+                  }
+
+                  // Convert to POD string
+                  const podString = JSON.stringify(podData);
+
+                  // Add to Zupass
+                  addPODPCD(podString, podPrivateKey, podFolder);
+                } catch (e) {
+                  console.error('Error adding to Zupass:', e);
+                  setError(e instanceof Error ? e.message : 'Failed to add data to Zupass');
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+            >
+              Store in Zupass
+            </button>
+          </div>
         </div>
       ) : (
         <p className="text-yellow-300">No data found for this user.</p>
