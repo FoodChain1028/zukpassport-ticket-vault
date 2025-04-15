@@ -55,6 +55,12 @@ export async function addVerificationData(
   const proofString = JSON.stringify(proof);
   const publicSignalsString = JSON.stringify(publicSignals);
   const disclosureDataString = disclosureData ? JSON.stringify(disclosureData) : null;
+  // check if userId already exists
+  const existingData = await getVerificationData(uid);
+  if (existingData) {
+    console.log(`Data already exists for UID: ${uid}`);
+    return;
+  }
 
   await dbInstance.run(
     'INSERT INTO verification_data (uid, proof, public_signals, disclosure_data) VALUES (?, ?, ?, ?)',
