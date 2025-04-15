@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import SelfQRcodeWrapper, { countries, SelfApp, SelfAppBuilder } from '@selfxyz/qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { logo } from '../../public/logo';
+import { useRouter } from 'next/navigation';
 
 function Playground() {
   const [userId, setUserId] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
     // Check if running in the browser
@@ -79,7 +81,8 @@ function Playground() {
             <SelfQRcodeWrapper
               selfApp={selfApp}
               onSuccess={() => {
-                console.log('Verification successful');
+                console.log('Verification successful, navigating...');
+                router.push('/verified');
               }}
               darkMode={false}
             />
