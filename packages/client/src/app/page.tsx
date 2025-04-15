@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { logo } from '../../public/logo';
 import { useRouter } from 'next/navigation';
 
-function Playground() {
+function SelfQrcodeScanner() {
   const [userId, setUserId] = useState<string>('');
   const router = useRouter();
 
@@ -87,7 +87,10 @@ function Playground() {
               selfApp={selfApp}
               onSuccess={() => {
                 console.log('Verification successful, navigating...');
-                router.push('/verified');
+                // wait for a few second for better UX
+                setTimeout(() => {
+                  router.push('/verified');
+                }, 1500);
               }}
               darkMode={false}
             />
@@ -99,4 +102,4 @@ function Playground() {
   );
 }
 
-export default Playground;
+export default SelfQrcodeScanner;
