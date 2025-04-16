@@ -4,11 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { addPODPCD } from '../utils';
 import { convertProofForPOD } from '../utils/podConverter';
 import { VerificationData } from '../types';
+import { useRouter } from 'next/navigation';
 
 function VerifiedPage() {
+  const router = useRouter();
   const [userData, setUserData] = useState<VerificationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [podFolder, setPodFolder] = useState('Self Passport Data');
   const [podPrivateKey] = useState('AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE='); // TODO: use stored pkey here, should change to user's pkey.
@@ -70,6 +73,7 @@ function VerifiedPage() {
       <p className="text-sm text-gray-300 mb-8 max-w-xl text-center italic">
         This is your proof data from Self, these are not stored anyway else but in your zupass.
       </p>
+      {message && <div className="bg-blue-800 px-4 py-2 rounded mb-4 text-white">{message}</div>}
       <p className="mb-4 text-sm text-gray-300">User ID: {userId?.substring(0, 8)}...</p>
       {userData ? (
         <div className="bg-gray-800 p-3 rounded shadow w-full max-w-2xl border border-gray-700">
@@ -119,8 +123,31 @@ function VerifiedPage() {
                   // Convert to POD string
                   const podString = JSON.stringify(podData);
 
-                  // Add to Zupass
+                  // Add to Zupass - this will open a popup window
+                  setMessage('Opening Zupass popup...');
                   addPODPCD(podString, podPrivateKey, podFolder);
+
+                  // The global zupassPopupWindow variable is maintained in utils.ts
+                  // We need to set up a check to monitor when that window closes
+                  setMessage('Waiting for Zupass popup to close...');
+
+                  // Set up an interval to check if popup is closed
+                  const checkPopupInterval = setInterval(() => {
+                    // Check if the global popup variable is null or closed
+                    // This works because sendZupassRequest in utils.ts sets zupassPopupWindow to null when closed
+                    if (!document.querySelector('.zupass-popup-open')) {
+                      // Clear the interval
+                      clearInterval(checkPopupInterval);
+
+                      // Show message before redirecting
+                      setMessage('Zupass data added successfully. Redirecting to buy page...');
+
+                      // Short delay before redirecting
+                      setTimeout(() => {
+                        router.push('/buy');
+                      }, 1000);
+                    }
+                  }, 500); // Check every 500ms
                 } catch (e) {
                   console.error('Error adding to Zupass:', e);
                   setError(e instanceof Error ? e.message : 'Failed to add data to Zupass');

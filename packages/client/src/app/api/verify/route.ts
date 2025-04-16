@@ -5,6 +5,7 @@ import { addVerificationData } from '../../../utils/db';
 export async function POST(request: Request) {
   try {
     const { proof, publicSignals } = await request.json();
+    console.log('Received proof and public signals:', { proof, publicSignals });
     const endpoint = process.env.NEXT_PUBLIC_NGROK_ENDPOINT;
     if (!endpoint) {
       return NextResponse.json({ message: 'Missing NGROK_ENDPOINT in ENV' }, { status: 500 });
