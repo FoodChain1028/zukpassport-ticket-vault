@@ -1,0 +1,28 @@
+[package]
+version = "0.1.0"
+name = "script"
+edition = "2021"
+default-run = "script"
+
+[[bin]]
+name = "script"
+path = "src/bin/main.rs"
+
+[dependencies]
+sp1-sdk = "4.1.0"
+
+sdk = { workspace = true }
+client-sdk = { workspace = true, features = ["sp1", "rest"] }
+
+contract = { path = "../lib", package = "sp1-token-contract"}
+
+
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde_json = "1.0.133"
+clap = { version = "4.5.23", features = ["derive"] }
+anyhow = "1.0.95"
+tokio = { version = "1.42.0", features = ["full", "tracing"] }
+borsh = "1.5.5"
+
+[build-dependencies]
+sp1-helper = "4.1.0"
