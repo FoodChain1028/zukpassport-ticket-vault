@@ -2,10 +2,10 @@
 
 extern crate alloc;
 
-use contract::HyleTicket;
 use sdk::guest::execute;
 use sdk::guest::GuestEnv;
 use sdk::guest::SP1Env;
+use sp1_ticket_contract::TicketAppState;
 
 sp1_zkvm::entrypoint!(main);
 
@@ -17,6 +17,6 @@ fn main() {
 
     let env = SP1Env {};
     let input = env.read();
-    let (_, output) = execute::<HyleTicket>(&input);
+    let (_, output) = execute::<TicketAppState>(&input);
     env.commit(&output);
 }
