@@ -22,7 +22,7 @@ struct Cli {
     #[arg(long, default_value = "http://localhost:4321")]
     pub host: String,
 
-    #[arg(long, default_value = "simple_identity")]
+    #[arg(long, default_value = "zupass_id")]
     pub contract_name: String,
 }
 
