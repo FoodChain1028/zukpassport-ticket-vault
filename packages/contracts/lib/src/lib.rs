@@ -1,9 +1,11 @@
-use std::collections::BTreeMap;
+pub mod constants;
+pub mod frontend_data;
 
-use borsh::{io::Error, BorshDeserialize, BorshSerialize};
-use serde::{Deserialize, Serialize};
-
+use borsh::{BorshDeserialize, BorshSerialize};
+use constants::EU_COUNTRIES;
+use frontend_data::create_mock_fe_data;
 use sdk::{caller::ExecutionContext, BlobIndex, ContractName, Identity, RunResult};
+use serde::{Deserialize, Serialize};
 use sp1_token_contract::SimpleTokenAction;
 
 impl sdk::HyleContract for TicketAppState {
@@ -22,11 +24,19 @@ impl sdk::HyleContract for TicketAppState {
         let transfer_action_contract_name =
             contract_input.blobs.get(1).unwrap().contract_name.clone();
 
+        let data = create_mock_fe_data();
+        // println!("mockdata: {}", data);
+
+        let nationality = data.passport.nationality;
+
         // Execute the given action
         let res = match ticket_app_action {
-            TicketAppAction::BuyTicket {} => {
-                self.buy_ticket(&ctx, transfer_action, transfer_action_contract_name)?
-            }
+            TicketAppAction::BuyTicket {} => self.buy_ticket(
+                &ctx,
+                &nationality,
+                transfer_action,
+                transfer_action_contract_name,
+            )?,
         };
 
         Ok((res, ctx, vec![]))
@@ -61,14 +71,23 @@ impl TicketAppState {
     pub fn buy_ticket(
         &mut self,
         ctx: &ExecutionContext,
+        nationality: &str,
         erc20_action: SimpleTokenAction,
         erc20_name: ContractName,
     ) -> Result<String, String> {
         // Check that a blob exists matching the given action, pop it from the callee blobs.
 
-        if self.tickets.contains(&ctx.caller) {
-            return Err(format!("Ticket already present for {:?}", &ctx.caller));
-        }
+        let discount = if EU_COUNTRIES.contains(&nationality) {
+            90
+        } else if nationality == "TWN" {
+            80
+        } else {
+            100
+        };
+
+        // if self.tickets.contains(&ctx.caller) {
+        //     return Err(format!("Ticket already present for {:?}", &ctx.caller));
+        // }
 
         match erc20_action {
             SimpleTokenAction::Transfer { recipient, amount } => {
@@ -86,10 +105,12 @@ impl TicketAppState {
                     ));
                 }
 
-                if amount < self.ticket_price.1 {
+                // so this should match
+                if amount < self.ticket_price.1 * discount {
                     return Err(format!(
                         "Transfer amount should be at least {} but was {}",
-                        self.ticket_price.0, &recipient
+                        self.ticket_price.1 * discount,
+                        amount
                     ));
                 }
             }

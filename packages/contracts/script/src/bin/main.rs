@@ -7,10 +7,9 @@ use sdk::Identity;
 use sdk::ProofTransaction;
 use sdk::{ContractInput, ContractName, HyleContract};
 use sp1_identity_contract::{IdentityAction, IdentityContractState};
-use sp1_ticket_contract::{TicketAppAction, TicketAppState};
-use sp1_token_contract::{SimpleToken, SimpleTokenAction};
-
 use sp1_sdk::include_elf;
+use sp1_ticket_contract::{frontend_data::create_mock_fe_data, TicketAppAction, TicketAppState};
+use sp1_token_contract::{SimpleToken, SimpleTokenAction};
 
 pub const CONTRACT_ELF: &[u8] = include_elf!("contract_elf");
 pub const IDENTITY_ELF: &[u8] = include_elf!("simple_identity");
@@ -44,21 +43,24 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Register { token: String, price: u128 },
+    Register {
+        token: String,
+        price: u128,
+    },
     BuyTicket {
         #[arg(long)]
         user: Option<String>,
-        
+
         #[arg(long)]
         pass: Option<String>,
-        
+
         #[arg(long)]
         nonce: Option<u32>,
     },
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
@@ -108,10 +110,11 @@ async fn main() {
                 .into();
 
             // Use command arguments or fall back to global CLI defaults
+            let discount = 80;
             let username = user.unwrap_or_else(|| cli.user.clone());
             let password = pass.unwrap_or_else(|| cli.pass.clone());
             let nonce_value = nonce.unwrap_or_else(|| cli.nonce.parse().unwrap_or(0));
-            
+
             println!("Initial State {:?}", &initial_state);
             println!("Initial State {:?}", initial_state.commit());
             println!("Identity {:?}", username);
@@ -124,7 +127,12 @@ async fn main() {
                 nonce: nonce_value,
             };
 
-            let identity_contract_name = identity.0.rsplit_once(".").unwrap_or(("", "simple_identity")).1.to_string();
+            let identity_contract_name = identity
+                .0
+                .rsplit_once(".")
+                .unwrap_or(("", "zupass_id"))
+                .1
+                .to_string();
 
             let blobs = vec![
                 sdk::Blob {
@@ -139,7 +147,7 @@ async fn main() {
                     data: sdk::BlobData(
                         borsh::to_vec(&SimpleTokenAction::Transfer {
                             recipient: contract_name.clone(),
-                            amount: initial_state.ticket_price.1,
+                            amount: initial_state.ticket_price.1 * discount,
                         })
                         .expect("Failed to encode Erc20 transfer action"),
                     ),
@@ -161,16 +169,22 @@ async fn main() {
             let blob_tx_hash = client.send_tx_blob(&blob_tx).await.unwrap();
             println!("✅ Blob tx sent. Tx hash: {}", blob_tx_hash);
 
-            // prove tx
+            // TODO: change this into the real data from frontend
+            let mock_frontend_data = create_mock_fe_data();
 
+            // Serialize the mock data
+            let serialized_data =
+                borsh::to_vec(&mock_frontend_data).expect("Failed to serialize frontend data");
+
+            // prove tx
             println!("Running and proving TicketApp blob");
 
-            // Build the contract input
+            // Build the contract input with our serialized frontend data
             let inputs = ContractInput {
                 state: initial_state.as_bytes().unwrap(),
                 identity: identity.clone(),
                 tx_hash: blob_tx_hash.clone().into(),
-                private_input: vec![],
+                private_input: serialized_data,
                 tx_ctx: None,
                 blobs: blobs.clone(),
                 index: sdk::BlobIndex(2),
@@ -243,16 +257,32 @@ async fn main() {
             };
 
             // Generate the zk proof
-            let proof = identity_prover.prove(inputs).await.unwrap();
+            let proof_result = identity_prover.prove(inputs).await;
+            match proof_result {
+                Ok(proof) => {
+                    println!("✅ Identity proof generation successful");
+                    let proof_tx = ProofTransaction {
+                        proof,
+                        contract_name: identity_contract_name.clone().into(),
+                    };
 
-            let proof_tx = ProofTransaction {
-                proof,
-                contract_name: identity_contract_name.clone().into(),
-            };
-
-            // Send the proof transaction
-            let proof_tx_hash = client.send_tx_proof(&proof_tx).await.unwrap();
-            println!("✅ Proof tx sent. Tx hash: {}", proof_tx_hash);
+                    // Send the proof transaction
+                    match client.send_tx_proof(&proof_tx).await {
+                        Ok(proof_tx_hash) => {
+                            println!("✅ Proof tx sent. Tx hash: {}", proof_tx_hash);
+                        }
+                        Err(e) => {
+                            println!("❌ Failed to send identity proof: {:?}", e);
+                            return Ok(());
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("❌ Identity proof failed: {:?}", e);
+                    return Ok(());
+                }
+            }
         }
     }
+    Ok(())
 }
