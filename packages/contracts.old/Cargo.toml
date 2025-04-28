@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "lib",
+    "program",
+    "script",
+]
+resolver = "2"
+
+[workspace.dependencies]
+sdk = { git = "https://github.com/hyle-org/hyle", package = "hyle-contract-sdk", tag = "v0.13.0-rc.1" }
+client-sdk = { git = "https://github.com/hyle-org/hyle", package = "hyle-client-sdk", tag = "v0.13.0-rc.1"  }
+
+sp1-identity-contract = { path = "../simple-identity-sp1/lib", package = "sp1-identity-contract"}
+sp1-token-contract = { path = "../simple-token-sp1/lib", package = "sp1-token-contract"}
