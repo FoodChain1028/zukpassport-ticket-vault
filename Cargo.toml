@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["packages/contracts", "packages/server"]
+
+[workspace.dependencies]
+sdk = { package = "hyle-contract-sdk", version = "0.13.0-rc.4" }
+client-sdk = { features=["indexer"],default-features = false, package = "hyle-client-sdk", version = "0.13.0-rc.4" }
+hyle = { version = "0.13.0-rc.4" }
+hyle-hyllar = { version = "0.13.0-rc.4" }
+
+contracts = { path = "packages/contracts", default-features = false, package = "contracts" }
+ticket-app = { path = "packages/contracts/ticket-app", package = "ticket-app" }
+
+[workspace.package]
+version = "0.4.1"
+edition = "2021"
+

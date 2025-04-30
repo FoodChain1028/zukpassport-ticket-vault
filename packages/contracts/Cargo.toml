@@ -1,14 +1,25 @@
-[workspace]
-members = [
-    "lib",
-    "program",
-    "script",
-]
-resolver = "2"
+[package]
+name = "contracts"
+edition = { workspace = true }
+rust-version = "1.81"
 
-[workspace.dependencies]
-sdk = { git = "https://github.com/hyle-org/hyle", package = "hyle-contract-sdk", tag = "v0.13.0-rc.1" }
-client-sdk = { git = "https://github.com/hyle-org/hyle", package = "hyle-client-sdk", tag = "v0.13.0-rc.1"  }
+[lib]
+path = "metadata.rs"
 
-sp1-identity-contract = { path = "../simple-identity-sp1/lib", package = "sp1-identity-contract"}
-sp1-token-contract = { path = "../simple-token-sp1/lib", package = "sp1-token-contract"}
+[dependencies]
+sdk = { workspace = true }
+ticket-app = { workspace = true, features = ["client"] }
+
+[build-dependencies]
+risc0-build = { version = "2.0.1", optional = true }
+
+[package.metadata.risc0]
+methods = ["ticket-app", "contract2"]
+
+[features]
+build = ["dep:risc0-build"]
+nonreproducible = ["build", "all"]
+
+# Following features are used to choose which contracts should be rebuild with docker
+all = ["ticket-app"]
+ticket-app = []
